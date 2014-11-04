@@ -1,0 +1,42 @@
+使用ansible的authorized_key模块+yaml实现批量上传公钥：
+1.生成密钥：
+ssh-keygen -t rsa -P ''   生成密钥
+-t dsa：密钥加密类型，rsa和dsa
+-p ''：不需要输入密码登录
+
+单台机器可用ssh-copy-id -i ~/.ssh/id_rsa.pub username@[ip/hostname]将密钥推送过去； 如果是多台机器这样操作有些麻烦，还有其他方法实现批量推送，例如shell+expect，既然选择用ansible来做自动化运维工具，我们就用ansible自带模块来实现批量推送：
+
+
+2.修改ansible的hosts（Inventory）文件(/etc/ansible/hosts),多台机器这里要逐一添加，这里是唯一比较坑的地方，但也还好，ssh连接使用普通用户和root用户都可以。格式如下：
+
+[主机名/ip] [ssh连接账戶] [ssh主机地址] [ssh连接账户的密码]
+
+[push_key]
+x.x.x.x ansible_ssh_user=username ansible_ssh_host=x.x.x.x ansible_ssh_pass="password"
+
+3.编辑ansible-playbook yaml文件
+
+---
+
+- name: Push public key for remote management console
+  hosts:
+        - x.x.x.x
+        - x.x.x.x
+        - x.x.x.x
+
+  remote_user: username
+  sudo_user: root
+  sudo: yes
+
+  tasks:
+        - name: push public key
+          authorized_key: user=remoteuser
+                          key="{{ lookup('file', '/root/.ssh/id_rsa.pub') }}"
+                          path='/home/remoteuser/.ssh/authorized_keys'
+                          manage_dir=no
+4.运行写好的playbook，祝你成功！亲测本地root公钥推送给远程普通用户成功实现批量推送。
+
+
+
+
+
