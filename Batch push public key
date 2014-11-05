@@ -34,7 +34,7 @@ x.x.x.x ansible_ssh_user=username ansible_ssh_host=x.x.x.x ansible_ssh_pass="pas
                           key="{{ lookup('file', '/root/.ssh/id_rsa.pub') }}"
                           path='/home/remoteuser/.ssh/authorized_keys'
                           manage_dir=no
-4.运行写好的playbook，祝你成功！亲测本地root公钥推送给远程普通用户成功实现批量推送。
+4.运行写好的playbook，祝你成功！亲测本地root公钥推送给远程普通用户成功实现批量推送，推送成功后删除/etc/ansible/hosts文件多余配置只保留IP地址
 
 
 
