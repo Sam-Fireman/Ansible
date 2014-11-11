@@ -1,45 +1,45 @@
 ---
 
-- name: Update UserCenter 236
+- name: Update UserCenter 236                           #更新节点1
   hosts:
-        - 10.15.88.236                         
+        - 10.15.88.236                                                       #节点1
 
   remote_user: fan
   sudo_user: root
   sudo: yes
 
-  vars:
+  vars:                                                                      #定义变量
         - tomcat_home: "/opt/apache-tomcat-UserCenter_Beta"
         - backup_dir: "/home/fan/bak"
         - app: "UserCenter_Beta"
         - service_name: "tomcat_User"
 
   tasks:
-        - name: Remove Updating Server IP From Nginx 
+        - name: Remove Updating Server IP From Nginx   #从代理去除节点1
           template: src=/srv/ansible/nginx_template/nginx.conf.236  dest=/opt/nginx/conf/nginx.conf
-          delegate_to: 10.15.88.24
+          delegate_to: 10.15.88.24                                          #委派代理服务器
 
-        - name: Reload Nginx
+        - name: Reload Nginx                                                #reload nginx
           command: /opt/nginx/sbin/nginx -s reload
           delegate_to: 10.15.88.24  
 
-        - name: Backup App
+        - name: Backup App                                                  #备份应用
           shell: tar zcf  {{backup_dir}}/{{app}}_$(date +%Y%m%d).tar.gz --exclude=WEB-INF/logs --exclude=WEB-INF/meta  {{tomcat_home}}/webapps/{{app}}
 
-        - name: Update Package
+        - name: Update Package                                             #更新或替换应用包
           copy: src=/srv/ansible/work/{{app}}
                 dest={{tomcat_home}}/webapps
           tags: "deploy"
 
-        - name: Restart Tomcat
+        - name: Restart Tomcat                                             #重启tomcat服务
           service: name={{service_name}} state=restarted enabled=yes
 
-        - name: timed wait
+        - name: timed wait                                                 #等待时间 单位:秒 等待节点1重启完成后再更新节点2
           pause: seconds=90
 
 
 
-- name: Update UserCenter 237
+- name: Update UserCenter 237                                              #更新节点2
   hosts:
         - 10.15.88.237
 
@@ -56,7 +56,7 @@
   tasks:
         - name: Remove Updating Server IP From Nginx 
           template: src=/srv/ansible/nginx_template/nginx.conf.237  dest=/opt/nginx/conf/nginx.conf
-          delegate_to: 10.15.88.24
+          delegate_to: 10.15.88.24                                        #从代理去除节点2
 
 
         - name: Reload Nginx
@@ -75,7 +75,7 @@
           service: name={{service_name}} state=restarted enabled=yes
 
 
-- name: Restore The Nginx Configuration
+- name: Restore The Nginx Configuration                                 #节点更新完毕还原nginx配置
   hosts:
         - 10.15.88.24
 
