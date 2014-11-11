@@ -1,0 +1,91 @@
+---
+
+- name: Update UserCenter 236
+  hosts:
+        - 10.15.88.236                         
+
+  remote_user: fan
+  sudo_user: root
+  sudo: yes
+
+  vars:
+        - tomcat_home: "/opt/apache-tomcat-UserCenter_Beta"
+        - backup_dir: "/home/fan/bak"
+        - app: "UserCenter_Beta"
+        - service_name: "tomcat_User"
+
+  tasks:
+        - name: Remove Updating Server IP From Nginx 
+          template: src=/srv/ansible/nginx_template/nginx.conf.236  dest=/opt/nginx/conf/nginx.conf
+          delegate_to: 10.15.88.24
+
+        - name: Reload Nginx
+          command: /opt/nginx/sbin/nginx -s reload
+          delegate_to: 10.15.88.24  
+
+        - name: Backup App
+          shell: tar zcf  {{backup_dir}}/{{app}}_$(date +%Y%m%d).tar.gz --exclude=WEB-INF/logs --exclude=WEB-INF/meta  {{tomcat_home}}/webapps/{{app}}
+
+        - name: Update Package
+          copy: src=/srv/ansible/work/{{app}}
+                dest={{tomcat_home}}/webapps
+          tags: "deploy"
+
+        - name: Restart Tomcat
+          service: name={{service_name}} state=restarted enabled=yes
+
+        - name: timed wait
+          pause: seconds=90
+
+
+
+- name: Update UserCenter 237
+  hosts:
+        - 10.15.88.237
+
+  remote_user: fan
+  sudo_user: root
+  sudo: yes
+
+  vars:
+        - tomcat_home: "/opt/apache-tomcat-UserCenter_Beta"
+        - backup_dir: "/home/fan/bak"
+        - app: "UserCenter_Beta"
+        - service_name: "tomcat_User"
+
+  tasks:
+        - name: Remove Updating Server IP From Nginx 
+          template: src=/srv/ansible/nginx_template/nginx.conf.237  dest=/opt/nginx/conf/nginx.conf
+          delegate_to: 10.15.88.24
+
+
+        - name: Reload Nginx
+          command: /opt/nginx/sbin/nginx -s reload
+          delegate_to: 10.15.88.24  
+
+        - name: Backup App
+          shell: tar zcf  {{backup_dir}}/{{app}}_$(date +%Y%m%d).tar.gz --exclude=WEB-INF/logs --exclude=WEB-INF/meta  {{tomcat_home}}/webapps/{{app}}
+
+        - name: Update Package
+          copy: src=/srv/ansible/work/{{app}}
+                dest={{tomcat_home}}/webapps
+          tags: "deploy"
+
+        - name: Restart Tomcat
+          service: name={{service_name}} state=restarted enabled=yes
+
+
+- name: Restore The Nginx Configuration
+  hosts:
+        - 10.15.88.24
+
+  remote_user: fan
+  sudo_user: root
+  sudo: yes
+
+  tasks:
+        - name: Remove Updating Server IP From Nginx
+          template: src=/srv/ansible/nginx_template/nginx.conf  dest=/opt/nginx/conf/nginx.conf
+
+        - name: Reload Nginx
+          command: /opt/nginx/sbin/nginx -s reload
