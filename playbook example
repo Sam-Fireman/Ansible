@@ -1,6 +1,6 @@
 ---
 
-- name: Update UserCenter 236                           #更新节点1
+- name: Update UserCenter 236                                                #更新节点1
   hosts:
         - 10.15.88.236                                                       #节点1
 
